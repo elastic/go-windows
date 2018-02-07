@@ -19,10 +19,98 @@ package windows
 import (
 	"fmt"
 	"syscall"
+
+	"github.com/pkg/errors"
 )
 
 // Syscalls
+//sys   _GetNativeSystemInfo(systemInfo *SystemInfo) (err error) = kernel32.GetNativeSystemInfo
 //sys   _GetTickCount64() (millis uint64, err error) = kernel32.GetTickCount64
+
+// SystemInfo is an equivalent representation of SYSTEM_INFO in the Windows API.
+// https://msdn.microsoft.com/en-us/library/ms724958%28VS.85%29.aspx?f=255&MSPPError=-2147217396
+type SystemInfo struct {
+	ProcessorArchitecture     ProcessorArchitecture
+	Reserved                  uint16
+	PageSize                  uint32
+	MinimumApplicationAddress uintptr
+	MaximumApplicationAddress uintptr
+	ActiveProcessorMask       uint64
+	NumberOfProcessors        uint32
+	ProcessorType             ProcessorType
+	AllocationGranularity     uint32
+	ProcessorLevel            uint16
+	ProcessorRevision         uint16
+}
+
+// ProcessorArchitecture specifies the processor architecture that the OS requires.
+type ProcessorArchitecture uint16
+
+// List of processor architectures associated with SystemInfo.
+const (
+	ProcessorArchitectureAMD64   ProcessorArchitecture = 9
+	ProcessorArchitectureARM     ProcessorArchitecture = 5
+	ProcessorArchitectureARM64   ProcessorArchitecture = 12
+	ProcessorArchitectureIA64    ProcessorArchitecture = 6
+	ProcessorArchitectureIntel   ProcessorArchitecture = 0
+	ProcessorArchitectureUnknown ProcessorArchitecture = 0xFFFF
+)
+
+func (a ProcessorArchitecture) String() string {
+	names := map[ProcessorArchitecture]string{
+		ProcessorArchitectureAMD64: "x86_64",
+		ProcessorArchitectureARM:   "arm",
+		ProcessorArchitectureARM64: "arm64",
+		ProcessorArchitectureIA64:  "ia64",
+		ProcessorArchitectureIntel: "x86",
+	}
+
+	name, found := names[a]
+	if !found {
+		return "unknown"
+	}
+	return name
+}
+
+// ProcessorType specifies the type of processor.
+type ProcessorType uint32
+
+// List of processor types associated with SystemInfo.
+const (
+	ProcessorTypeIntel386     ProcessorType = 386
+	ProcessorTypeIntel486     ProcessorType = 486
+	ProcessorTypeIntelPentium ProcessorType = 586
+	ProcessorTypeIntelIA64    ProcessorType = 2200
+	ProcessorTypeAMDX8664     ProcessorType = 8664
+)
+
+func (t ProcessorType) String() string {
+	names := map[ProcessorType]string{
+		ProcessorTypeIntel386:     "386",
+		ProcessorTypeIntel486:     "486",
+		ProcessorTypeIntelPentium: "586",
+		ProcessorTypeIntelIA64:    "ia64",
+		ProcessorTypeAMDX8664:     "x64_64",
+	}
+
+	name, found := names[t]
+	if !found {
+		return "unknown"
+	}
+	return name
+}
+
+// GetNativeSystemInfo retrieves information about the current system to an
+// application running under WOW64. If the function is called from a 64-bit
+// application, it is equivalent to the GetSystemInfo function.
+// https://msdn.microsoft.com/en-us/library/ms724340%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396
+func GetNativeSystemInfo() (SystemInfo, error) {
+	var systemInfo SystemInfo
+	if err := _GetNativeSystemInfo(&systemInfo); err != nil {
+		return SystemInfo{}, errors.Wrap(err, "GetNativeSystemInfo failed")
+	}
+	return systemInfo, nil
+}
 
 // Version identifies a Windows version by major, minor, and build number.
 type Version struct {

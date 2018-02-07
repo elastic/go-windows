@@ -38,11 +38,24 @@ var (
 	modkernel32 = syscall.NewLazyDLL("kernel32.dll")
 	modversion  = syscall.NewLazyDLL("version.dll")
 
+	procGetNativeSystemInfo     = modkernel32.NewProc("GetNativeSystemInfo")
 	procGetTickCount64          = modkernel32.NewProc("GetTickCount64")
 	procGetFileVersionInfoW     = modversion.NewProc("GetFileVersionInfoW")
 	procGetFileVersionInfoSizeW = modversion.NewProc("GetFileVersionInfoSizeW")
 	procVerQueryValueW          = modversion.NewProc("VerQueryValueW")
 )
+
+func _GetNativeSystemInfo(systemInfo *SystemInfo) (err error) {
+	r1, _, e1 := syscall.Syscall(procGetNativeSystemInfo.Addr(), 1, uintptr(unsafe.Pointer(systemInfo)), 0, 0)
+	if r1 == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
 
 func _GetTickCount64() (millis uint64, err error) {
 	r0, _, e1 := syscall.Syscall(procGetTickCount64.Addr(), 0, 0, 0, 0)
