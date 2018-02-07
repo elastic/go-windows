@@ -21,6 +21,9 @@ import (
 	"syscall"
 )
 
+// Syscalls
+//sys   _GetTickCount64() (millis uint64, err error) = kernel32.GetTickCount64
+
 // Version identifies a Windows version by major, minor, and build number.
 type Version struct {
 	Major int
@@ -54,4 +57,12 @@ func GetWindowsVersion() Version {
 func (v Version) IsWindowsVistaOrGreater() bool {
 	// Vista is 6.0.
 	return v.Major >= 6 && v.Minor >= 0
+}
+
+// GetTickCount64 retrieves the number of milliseconds that have elapsed since
+// the system was started.
+// This function is available on Windows Vista and newer.
+// https://msdn.microsoft.com/en-us/library/windows/desktop/ms724411(v=vs.85).aspx
+func GetTickCount64() (uint64, error) {
+	return _GetTickCount64()
 }

@@ -12,9 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package windows contains various Windows system calls.
+// +build windows
+
 package windows
 
-// Use "GOOS=windows go generate -v -x" to generate the sources.
-// Add -trace to enable debug prints around syscalls.
-//go:generate go run $GOROOT/src/syscall/mksyscall_windows.go -systemdll=false -output zsyscall_windows.go kernel32.go version.go
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestGetTickCount64(t *testing.T) {
+	millis, err := GetTickCount64()
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.True(t, millis > 0, "millis (%d) must be greater than 0", millis)
+}

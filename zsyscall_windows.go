@@ -35,12 +35,27 @@ func errnoErr(e syscall.Errno) error {
 }
 
 var (
-	modversion = syscall.NewLazyDLL("version.dll")
+	modkernel32 = syscall.NewLazyDLL("kernel32.dll")
+	modversion  = syscall.NewLazyDLL("version.dll")
 
+	procGetTickCount64          = modkernel32.NewProc("GetTickCount64")
 	procGetFileVersionInfoW     = modversion.NewProc("GetFileVersionInfoW")
 	procGetFileVersionInfoSizeW = modversion.NewProc("GetFileVersionInfoSizeW")
 	procVerQueryValueW          = modversion.NewProc("VerQueryValueW")
 )
+
+func _GetTickCount64() (millis uint64, err error) {
+	r0, _, e1 := syscall.Syscall(procGetTickCount64.Addr(), 0, 0, 0, 0)
+	millis = uint64(r0)
+	if millis == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
 
 func _GetFileVersionInfo(filename string, reserved uint32, dataLen uint32, data *byte) (success bool, err error) {
 	var _p0 *uint16
