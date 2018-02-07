@@ -14,3 +14,4 @@ script:
 - go run .ci/scripts/check_copyright.go .
 - go run .ci/scripts/check_format.go
 - go run .ci/scripts/check_lint.go
+- go test ./...
