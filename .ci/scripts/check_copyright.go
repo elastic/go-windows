@@ -1,16 +1,19 @@
-// Copyright 2018 Elasticsearch Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
 
 package main
 
@@ -21,6 +24,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -30,7 +34,7 @@ var ignores = []string{
 	`^testing/`,
 }
 
-var ignoreRe = regexp.MustCompile(strings.Join(ignores, "|"))
+var ignoreRe *regexp.Regexp
 
 // File extensions to check
 var checkExts = map[string]bool{
@@ -40,20 +44,30 @@ var checkExts = map[string]bool{
 
 // Valid copyright headers, searched for in the top five lines in each file.
 var copyrightRegexps = []string{
-	`Copyright`,
+	`Licensed to Elasticsearch B.V.`,
 	`Created by cgo -godefs - DO NOT EDIT`,
 	`MACHINE GENERATED`,
 }
 
 var copyrightRe = regexp.MustCompile(strings.Join(copyrightRegexps, "|"))
 
+func init() {
+	ignorePattern := strings.Join(ignores, "|")
+
+	if runtime.GOOS == "windows" {
+		// Modify file separators for Windows.
+		ignorePattern = strings.Replace(ignorePattern, "/", `\\`, -1)
+	}
+
+	ignoreRe = regexp.MustCompile(ignorePattern)
+}
+
 func main() {
 	flag.Parse()
 
 	args := flag.Args()
 	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "No directories specified.")
-		os.Exit(1)
+		args = []string{"."}
 	}
 
 	for _, dir := range args {
