@@ -133,9 +133,7 @@ type MemoryStatusEx struct {
 // https://msdn.microsoft.com/en-us/library/ms724340%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396
 func GetNativeSystemInfo() (SystemInfo, error) {
 	var systemInfo SystemInfo
-
 	_GetNativeSystemInfo(&systemInfo)
-
 	return systemInfo, nil
 }
 
