@@ -30,6 +30,7 @@ import (
 
 var ignoreWarnings = []string{
 	`don't use underscores in Go names`,
+	`don't use ALL_CAPS in Go names`,
 }
 
 var ignoreWarningsRe = regexp.MustCompile(strings.Join(ignoreWarnings, "|"))
