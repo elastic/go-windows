@@ -20,6 +20,7 @@
 package windows
 
 import (
+	"syscall"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,4 +32,17 @@ func TestGetTickCount64(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.True(t, millis > 0, "millis (%d) must be greater than 0", millis)
+}
+
+func TestGetProcessHandleCount(t *testing.T) {
+	h, err := syscall.GetCurrentProcess()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := GetProcessHandleCount(h)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.True(t, count > 0)
 }
