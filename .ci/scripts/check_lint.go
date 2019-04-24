@@ -6,7 +6,7 @@
 // not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-// http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
 // software distributed under the License is distributed on an
@@ -22,8 +22,11 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"go/build"
+	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -36,30 +39,33 @@ var ignoreWarnings = []string{
 var ignoreWarningsRe = regexp.MustCompile(strings.Join(ignoreWarnings, "|"))
 
 func main() {
+	log.SetFlags(0)
 	flag.Parse()
 
-	out, err := exec.Command("go", "get", "-u", "github.com/golang/lint/golint").Output()
+	goGet := exec.Command("go", "get", "-u", "golang.org/x/lint/golint")
+	goGet.Env = os.Environ()
+	goGet.Env = append(goGet.Env, "GO111MODULE=off")
+	out, err := goGet.Output()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "error", err)
-		os.Exit(1)
+		log.Fatalf("failed to %v: %v", strings.Join(goGet.Args, " "), err)
 	}
 
-	golint := exec.Command("golint", flag.Args()...)
+	golint := exec.Command(filepath.Join(build.Default.GOPATH, "bin", "golint"),
+		flag.Args()...)
 	golint.Env = os.Environ()
 	golint.Env = append(golint.Env, "GOOS=windows")
 	out, err = golint.Output()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "error", err)
-		os.Exit(1)
+		log.Fatalf("failed to %v: %v", strings.Join(golint.Args, " "), err)
 	}
 
 	out, err = filterIgnores(out)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "error", err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	if len(out) > 0 {
+		log.Println("There are golint warnings.")
 		fmt.Printf(string(out))
 		os.Exit(1)
 	}
