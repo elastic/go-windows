@@ -43,7 +43,7 @@ pipeline {
           }
           axis {
             name 'PLATFORM'
-            values 'ubuntu-18 && immutable' // TODO: support windows, 'windows-2019 && immutable'
+            values 'ubuntu-18 && immutable', 'windows-2019 && immutable'
           }
         }
         stages {
@@ -55,7 +55,15 @@ pipeline {
                   deleteDir()
                   unstash 'source'
                   dir("${BASE_DIR}"){
-                    sh(label: "test for ${GO_VERSION} in ${PLATFORM}", script: '.ci/scripts/test.sh')
+                    whenTrue(isUnix()) {
+                      sh(label: "go test for ${GO_VERSION} in ${PLATFORM}", script: '.ci/scripts/test.sh')
+                    }
+                    whenFalse(isUnix()) {
+                      retryWithSleep(retries: 2, seconds: 5, backoff: true){
+                        bat(label: "Install Go/Mage ${GO_VERSION}", script: ".ci/scripts/install-tools.bat")
+                      }
+                      bat(label: "go test for ${GO_VERSION} in ${PLATFORM}", script: '.ci/scripts/test.bat')
+                    }
                   }
                 }
               }
@@ -73,6 +81,30 @@ pipeline {
   post {
     cleanup {
       notifyBuildResult(prComment: true)
+    }
+  }
+}
+
+def withGoEnvMultiplatform(Map args = [:], Closure body) {
+  if(isUnix()) {
+    withGoEnv(version: "${args.version}"){
+      body()
+    }
+  } else {
+    def mingwArch = is32() ? '32' : '64'
+    def goArch = is32() ? '386' : 'amd64'
+    def chocoPath = 'C:\\ProgramData\\chocolatey\\bin'
+    def userProfile="${env.WORKSPACE}"
+    def goRoot = "${userProfile}\\.gvm\\versions\\go${args.version}.windows.${goArch}"
+    def path = "${env.WORKSPACE}\\bin;${goRoot}\\bin;${chocoPath};C:\\tools\\mingw${mingwArch}\\bin;${env.PATH}"
+    withEnv([
+      "GOPATH=${env.WORKSPACE}",
+      "GOROOT=${goRoot}",
+      "HOME=${env.WORKSPACE}",
+      "PATH=${path}",
+      "USERPROFILE=${userProfile}"
+    ]) {
+      body()
     }
   }
 }
