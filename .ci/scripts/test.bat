@@ -1,4 +1,7 @@
-GO111MODULE=off go get -u github.com/elastic/go-licenser
+set
+set GO111MODULE=off
+go get -u github.com/elastic/go-licenser
+set GO111MODULE=on
 go mod verify
 go-licenser -d
 go run .ci/scripts/check_format.go
