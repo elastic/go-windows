@@ -1,4 +1,5 @@
 set
+dir /b /a-d %GOROOT%
 set GO111MODULE=off
 go get -u github.com/elastic/go-licenser
 set GO111MODULE=on

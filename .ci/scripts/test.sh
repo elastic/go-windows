@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
+env | sort
+find "${GOROOT}" -type f || true
+
 GO111MODULE=off go get -u github.com/elastic/go-licenser
 go mod verify
 go-licenser -d
