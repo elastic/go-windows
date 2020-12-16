@@ -52,9 +52,9 @@ pipeline {
             options { skipDefaultCheckout() }
             steps {
               withGithubNotify(context: "Test-${GO_VERSION}-${PLATFORM}") {
+                deleteDir()
+                unstash 'source'
                 withGoEnv(version: "${GO_VERSION}"){
-                  deleteDir()
-                  unstash 'source'
                   dir("${BASE_DIR}"){
                     whenTrue(isUnix()) {
                       sh(label: "go test for ${GO_VERSION} in ${PLATFORM}", script: '.ci/scripts/test.sh')
