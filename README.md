@@ -1,6 +1,6 @@
 # go-windows
 
-[![Build Status](http://img.shields.io/travis/elastic/go-windows.svg?style=flat-square)][travis]
+[![Build Status](https://beats-ci.elastic.co/job/Library/job/go-windows-mbp/job/master/badge/icon)](https://beats-ci.elastic.co/job/Library/job/go-windows-mbp/job/master/)
 [![Build status](https://ci.appveyor.com/api/projects/status/remqhuw0jjguygc3/branch/master?svg=true)][appveyor]
 [![Go Documentation](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)][godocs]
 
