@@ -49,6 +49,7 @@ pipeline {
         stages {
           stage('Test') {
             agent { label "${PLATFORM}" }
+            options { skipDefaultCheckout() }
             steps {
               withGithubNotify(context: "Test-${GO_VERSION}-${PLATFORM}") {
                 withGoEnv(version: "${GO_VERSION}"){
