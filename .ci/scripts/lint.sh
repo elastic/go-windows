@@ -1,0 +1,3 @@
+#!/bin/sh
+
+go run golang.org/x/lint/golint@latest ./...
