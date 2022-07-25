@@ -1,6 +1,6 @@
 
 go mod verify
-go run github.com/elastic/go-licenser@latest -d
+go run github.com/elastic/go-licenser@latest -d || EXIT /B 1
 
 go run golang.org/x/lint/golint@latest ./...
 
