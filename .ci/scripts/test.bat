@@ -2,7 +2,7 @@
 go mod verify || EXIT /B 1
 go run github.com/elastic/go-licenser@latest -d || EXIT /B 1
 
-go run golang.org/x/lint/golint@latest -set_exit_status ./... || EXIT /B 1
+go run honnef.co/go/tools/cmd/staticcheck@2022.1 ./... || EXIT /B 1
 
 go run golang.org/x/tools/cmd/goimports@latest -l -local github.com/elastic/go-windows . || EXIT /B 1
 
