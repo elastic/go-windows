@@ -1,10 +1,10 @@
 
-go mod verify
+go mod verify || EXIT /B 1
 go run github.com/elastic/go-licenser@latest -d || EXIT /B 1
 
-go run golang.org/x/lint/golint@latest -set_exit_status ./...
+go run golang.org/x/lint/golint@latest -set_exit_status ./... || EXIT /B 1
 
-go run golang.org/x/tools/cmd/goimports@latest -l -local github.com/elastic/go-windows .
+go run golang.org/x/tools/cmd/goimports@latest -l -local github.com/elastic/go-windows . || EXIT /B 1
 
 SET OUTPUT_JSON_FILE=build\output-report.out
 SET OUTPUT_JUNIT_FILE=build\junit-%GO_VERSION%.xml
