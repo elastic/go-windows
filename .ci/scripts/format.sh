@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 out=$(go run golang.org/x/tools/cmd/goimports@latest -l -local github.com/elastic/go-windows .)
 
 if [ ! -z "$out" ]; then
