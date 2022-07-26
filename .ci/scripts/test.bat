@@ -1,14 +1,12 @@
-set
-set GO111MODULE=off
-go get -u github.com/elastic/go-licenser
-set GO111MODULE=on
-go mod verify
-go-licenser -d
-go run .ci/scripts/check_format.go
-go run .ci/scripts/check_lint.go
 
-mkdir -p build
-SET OUT_FILE=build\output-report.out
-go test "./..." -v > %OUT_FILE% | type %OUT_FILE%
-go get -v -u github.com/jstemmer/go-junit-report
-go-junit-report > build\junit-%GO_VERSION%.xml < %OUT_FILE%
+go mod verify || EXIT /B 1
+go run github.com/elastic/go-licenser@latest -d || EXIT /B 1
+
+go run honnef.co/go/tools/cmd/staticcheck@2022.1 ./... || EXIT /B 1
+
+go run golang.org/x/tools/cmd/goimports@latest -l -local github.com/elastic/go-windows . || EXIT /B 1
+
+SET OUTPUT_JSON_FILE=build\output-report.out
+SET OUTPUT_JUNIT_FILE=build\junit-%GO_VERSION%.xml
+
+go run gotest.tools/gotestsum@latest --no-color -f standard-quiet --jsonfile "$OUTPUT_JSON_FILE" --junitfile "$OUTPUT_JUNIT_FILE" ./...

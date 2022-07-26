@@ -1,19 +1,20 @@
-#!/usr/bin/env bash
-set -euxo pipefail
+#!/bin/sh
 
-GO111MODULE=off go get -u github.com/elastic/go-licenser
+set -e
+
 go mod verify
-go-licenser -d
-go run .ci/scripts/check_format.go
-go run .ci/scripts/check_lint.go
+go run github.com/elastic/go-licenser@latest -d
+go run honnef.co/go/tools/cmd/staticcheck@2022.1 ./...
+out=$(go run golang.org/x/tools/cmd/goimports@latest -l -local github.com/elastic/go-windows .)
+
+if [ ! -z "$out" ]; then
+	printf "Run goimports on the code.\n"
+	exit 1
+fi
 
 # Run the tests
-set +e
-export OUT_FILE="build/test-report.out"
+export OUTPUT_JSON_FILE="build/test-report.out"
+export OUTPUT_JUNIT_FILE="build/junit-${GO_VERSION}.xml"
 mkdir -p build
-go test -v ./... | tee ${OUT_FILE}
-status=$?
-go get -v -u github.com/jstemmer/go-junit-report
-go-junit-report > "build/junit-${GO_VERSION}.xml" < ${OUT_FILE}
 
-exit ${status}
+go run gotest.tools/gotestsum@latest --no-color -f standard-quiet --jsonfile "$OUTPUT_JSON_FILE" --junitfile "$OUTPUT_JUNIT_FILE" ./...
