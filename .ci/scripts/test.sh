@@ -4,8 +4,13 @@ set -e
 
 go mod verify
 go run github.com/elastic/go-licenser@latest -d
-sh .ci/scripts/format.sh
-sh .ci/scripts/lint.sh
+go run honnef.co/go/tools/cmd/staticcheck@2022.1 ./...
+out=$(go run golang.org/x/tools/cmd/goimports@latest -l -local github.com/elastic/go-windows .)
+
+if [ ! -z "$out" ]; then
+	printf "Run goimports on the code.\n"
+	exit 1
+fi
 
 # Run the tests
 export OUTPUT_JSON_FILE="build/test-report.out"
