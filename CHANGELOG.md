@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Replace pkg/errors with Go 1.13 native errors #18.
+
 ### Changed
 
 ### Deprecated
@@ -15,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Fixed
+
+- Add explicit Go directive #19.
 
 ### Security
 
