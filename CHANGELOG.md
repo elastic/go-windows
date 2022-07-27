@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Add explicit Go directive #19.
+- Add explicit Go directive to go.mod requiring Go 1.17 or newer. #19.
 
 ### Security
 
