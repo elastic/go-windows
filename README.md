@@ -1,6 +1,6 @@
 # go-windows
 
-[![Build Status](https://beats-ci.elastic.co/job/Library/job/go-windows-mbp/job/main/badge/icon)](https://beats-ci.elastic.co/job/Library/job/go-windows-mbp/job/main/)
+[![ci](https://github.com/elastic/go-windows/actions/workflows/ci.yml/badge.svg)](https://github.com/elastic/go-windows/actions/workflows/ci.yml)
 [![Go Documentation](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)][godocs]
 
 [godocs]:   http://godoc.org/github.com/elastic/go-windows
