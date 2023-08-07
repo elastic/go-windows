@@ -35,7 +35,7 @@ jobs:
 
       - uses: actions/setup-go@v4
         with:
-          go-version-file: ${{ matrix.go-version }}
+          go-version: ${{ matrix.go-version }}
           cache: true
           cache-dependency-path: '**/go.sum'
 
