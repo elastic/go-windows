@@ -25,13 +25,17 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.17', '1.18']
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-go@v4
         with:
-          go-version-file: .go-version
+          go-version-file: ${{ matrix.go-version }}
           cache: true
           cache-dependency-path: '**/go.sum'
 
@@ -41,8 +45,14 @@ jobs:
           gofmt -l . | read && echo "Code differs from gofmt's style. Run 'gofmt -w .'" 1>&2 && exit 1 || true
           go vet
 
-      - name: Build
-        run: go build
-
       - name: Test
-        run: go test -v ./...
+        run: ${{ startsWith(matrix.os,'windows') && '.ci/scripts/test.bat' || '.ci/scripts/test.sh' }}
+        env:
+          GO_VERSION: ${{ matrix.go-version }}
+
+      - name: Store test results
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: build/junit*.xml
