@@ -3,7 +3,9 @@ name: OpenTelemetry Export Trace
 
 on:
   workflow_run:
-    workflows: [ci]
+    workflows:
+      - ci
+      - test-reporter
     types: [completed]
 
 jobs:
