@@ -3,7 +3,7 @@
 [![ci](https://github.com/elastic/go-windows/actions/workflows/ci.yml/badge.svg)](https://github.com/elastic/go-windows/actions/workflows/ci.yml)
 [![Go Documentation](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)][godocs]
 
-[godocs]:   http://godoc.org/github.com/elastic/go-windows
+[godocs]: https://pkg.go.dev/github.com/elastic/go-windows?GOOS=windows
 
 go-windows is a library for Go (golang) that provides wrappers to various
 Windows APIs that are not covered by the stdlib or by
