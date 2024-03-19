@@ -12,13 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- go.mod - Require Go 1.18 or newer. #27
+
 ### Deprecated
 
 ### Removed
 
 ### Fixed
-
-- Add explicit Go directive to go.mod requiring Go 1.17 or newer. #19.
 
 ### Security
 
