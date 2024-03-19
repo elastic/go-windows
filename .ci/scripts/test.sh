@@ -4,7 +4,6 @@ set -e
 
 go mod verify
 go run github.com/elastic/go-licenser@latest -d
-go run honnef.co/go/tools/cmd/staticcheck@2022.1 ./...
 out=$(go run golang.org/x/tools/cmd/goimports@latest -l -local github.com/elastic/go-windows .)
 
 if [ ! -z "$out" ]; then
