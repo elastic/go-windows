@@ -28,7 +28,10 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// Deprecated: use x/sys/windows
+// FixedFileInfo contains version information for a file. This information is
+// language and code page independent. This is an equivalent representation of
+// VS_FIXEDFILEINFO.
+// https://msdn.microsoft.com/en-us/library/windows/desktop/ms646997(v=vs.85).aspx
 type FixedFileInfo struct {
 	Signature        uint32
 	StrucVersion     uint32
@@ -107,12 +110,12 @@ func (d VersionData) QueryValue(key string) (string, error) {
 // version-information resource. It queries the root block to get the
 // VS_FIXEDFILEINFO value.
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms647464(v=vs.85).aspx
-func (d VersionData) FixedFileInfo() (*windows.VS_FIXEDFILEINFO, error) {
+func (d VersionData) FixedFileInfo() (*FixedFileInfo, error) {
 	if len(d) == 0 {
 		return nil, errors.New("use GetFileVersionInfo to initialize VersionData")
 	}
 
-	var fixedInfo *windows.VS_FIXEDFILEINFO
+	var fixedInfo *FixedFileInfo
 	fixedInfoLen := uint32(unsafe.Sizeof(*fixedInfo))
 	if err := windows.VerQueryValue(unsafe.Pointer(&d[0]), `\`, (unsafe.Pointer)(&fixedInfo), &fixedInfoLen); err != nil {
 		return nil, fmt.Errorf("VerQueryValue failed for \\: %w", err)
