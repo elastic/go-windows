@@ -24,17 +24,11 @@ import (
 	"errors"
 	"fmt"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
-// Syscalls
-//sys   _GetFileVersionInfo(filename string, reserved uint32, dataLen uint32, data *byte) (success bool, err error) [!success] = version.GetFileVersionInfoW
-//sys   _GetFileVersionInfoSize(filename string, handle uintptr) (size uint32, err error) = version.GetFileVersionInfoSizeW
-//sys   _VerQueryValueW(data *byte, subBlock string, pBuffer *uintptr, len *uint32) (success bool, err error) [!success] = version.VerQueryValueW
-
-// FixedFileInfo contains version information for a file. This information is
-// language and code page independent. This is an equivalent representation of
-// VS_FIXEDFILEINFO.
-// https://msdn.microsoft.com/en-us/library/windows/desktop/ms646997(v=vs.85).aspx
+// Deprecated: use x/sys/windows
 type FixedFileInfo struct {
 	Signature        uint32
 	StrucVersion     uint32
@@ -83,25 +77,20 @@ func (d VersionData) QueryValue(key string) (string, error) {
 		CodePage uint16
 	}
 
-	var dataPtr uintptr
-	var size uint32
-	if _, err := _VerQueryValueW(&d[0], `\VarFileInfo\Translation`, &dataPtr, &size); err != nil || size == 0 {
+	var langCodePage *LangAndCodePage
+	langCodeLen := uint32(unsafe.Sizeof(*langCodePage))
+	if err := windows.VerQueryValue(unsafe.Pointer(&d[0]), `\VarFileInfo\Translation`, (unsafe.Pointer)(&langCodePage), &langCodeLen); err != nil || langCodeLen == 0 {
 		return "", fmt.Errorf("failed to get list of languages: %w", err)
 	}
 
-	offset := int(dataPtr - (uintptr)(unsafe.Pointer(&d[0])))
-	if offset <= 0 || offset > len(d)-1 {
-		return "", errors.New("invalid address")
-	}
-
-	l := *(*LangAndCodePage)(unsafe.Pointer(&d[offset]))
-
-	subBlock := fmt.Sprintf(`\StringFileInfo\%04x%04x\%v`, l.Language, l.CodePage, key)
-	if _, err := _VerQueryValueW(&d[0], subBlock, &dataPtr, &size); err != nil || size == 0 {
+	var dataPtr uintptr
+	var size uint32
+	subBlock := fmt.Sprintf(`\StringFileInfo\%04x%04x\%v`, langCodePage.Language, langCodePage.CodePage, key)
+	if err := windows.VerQueryValue(unsafe.Pointer(&d[0]), subBlock, (unsafe.Pointer)(&dataPtr), &size); err != nil || langCodeLen == 0 {
 		return "", fmt.Errorf("failed to query %v: %w", subBlock, err)
 	}
 
-	offset = int(dataPtr - (uintptr)(unsafe.Pointer(&d[0])))
+	offset := int(dataPtr - (uintptr)(unsafe.Pointer(&d[0])))
 	if offset <= 0 || offset > len(d)-1 {
 		return "", errors.New("invalid address")
 	}
@@ -118,38 +107,30 @@ func (d VersionData) QueryValue(key string) (string, error) {
 // version-information resource. It queries the root block to get the
 // VS_FIXEDFILEINFO value.
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms647464(v=vs.85).aspx
-func (d VersionData) FixedFileInfo() (*FixedFileInfo, error) {
+func (d VersionData) FixedFileInfo() (*windows.VS_FIXEDFILEINFO, error) {
 	if len(d) == 0 {
 		return nil, errors.New("use GetFileVersionInfo to initialize VersionData")
 	}
 
-	var dataPtr uintptr
-	var size uint32
-	if _, err := _VerQueryValueW(&d[0], `\`, &dataPtr, &size); err != nil {
+	var fixedInfo *windows.VS_FIXEDFILEINFO
+	fixedInfoLen := uint32(unsafe.Sizeof(*fixedInfo))
+	if err := windows.VerQueryValue(unsafe.Pointer(&d[0]), `\`, (unsafe.Pointer)(&fixedInfo), &fixedInfoLen); err != nil {
 		return nil, fmt.Errorf("VerQueryValue failed for \\: %w", err)
 	}
 
-	offset := int(dataPtr - (uintptr)(unsafe.Pointer(&d[0])))
-	if offset <= 0 || offset > len(d)-1 {
-		return nil, errors.New("invalid address")
-	}
-
-	// Make a copy of the struct.
-	ffi := *(*FixedFileInfo)(unsafe.Pointer(&d[offset]))
-
-	return &ffi, nil
+	return fixedInfo, nil
 }
 
 // GetFileVersionInfo retrieves version information for the specified file.
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms647003(v=vs.85).aspx
 func GetFileVersionInfo(filename string) (VersionData, error) {
-	size, err := _GetFileVersionInfoSize(filename, 0)
+	size, err := windows.GetFileVersionInfoSize(filename, nil)
 	if err != nil {
 		return nil, fmt.Errorf("GetFileVersionInfoSize failed: %w", err)
 	}
 
 	data := make(VersionData, size)
-	_, err = _GetFileVersionInfo(filename, 0, uint32(len(data)), &data[0])
+	err = windows.GetFileVersionInfo(filename, 0, uint32(len(data)), unsafe.Pointer(&data[0]))
 	if err != nil {
 		return nil, fmt.Errorf("GetFileVersionInfo failed: %w", err)
 	}
