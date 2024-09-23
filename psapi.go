@@ -24,12 +24,13 @@ import (
 	"fmt"
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 // Syscalls
 //sys   _GetProcessMemoryInfo(handle syscall.Handle, psmemCounters *ProcessMemoryCountersEx, cb uint32) (err error) = psapi.GetProcessMemoryInfo
 //sys   _GetProcessImageFileNameA(handle syscall.Handle, imageFileName *byte, nSize uint32) (len uint32, err error) = psapi.GetProcessImageFileNameA
-//sys   _EnumProcesses(lpidProcess *uint32, cb uint32, lpcbNeeded *uint32) (err error) = psapi.EnumProcesses
 
 var (
 	sizeofProcessMemoryCountersEx = uint32(unsafe.Sizeof(ProcessMemoryCountersEx{}))
@@ -90,7 +91,7 @@ func GetProcessImageFileName(handle syscall.Handle) (string, error) {
 func EnumProcesses() (pids []uint32, err error) {
 	for nAlloc, nGot := uint32(128), uint32(0); ; nAlloc *= 2 {
 		pids = make([]uint32, nAlloc)
-		if err = _EnumProcesses(&pids[0], nAlloc*4, &nGot); err != nil {
+		if err = windows.EnumProcesses(pids, &nGot); err != nil {
 			return nil, err
 		}
 		if nGot/4 < nAlloc {

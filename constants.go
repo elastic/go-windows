@@ -21,13 +21,9 @@
 package windows
 
 const (
-	// This process access rights are missing from Go's syscall package as of 1.10.3
-
-	// PROCESS_VM_READ right allows to read memory from the target process.
+	// Deprecated: use x/sys/windows
 	PROCESS_VM_READ = 0x10
 
-	// PROCESS_QUERY_LIMITED_INFORMATION right allows to access a subset of the
-	// information granted by PROCESS_QUERY_INFORMATION. Not available in XP
-	// and Server 2003.
+	// Deprecated: use x/sys/windows
 	PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
 )

@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 const (
@@ -108,20 +110,11 @@ type RtlUserProcessParameters struct {
 	CommandLine   UnicodeString
 }
 
-// Syscalls
-// Warning: NtQueryInformationProcess is an unsupported API that can change
-//          in future versions of Windows. Available from XP to Windows 10.
-//sys   _NtQueryInformationProcess(handle syscall.Handle, infoClass uint32, info uintptr, infoLen uint32, returnLen *uint32) (ntStatus uint32) = ntdll.NtQueryInformationProcess
-
-// NtQueryInformationProcess is a wrapper for ntdll.NtQueryInformationProcess.
-// The handle must have the PROCESS_QUERY_INFORMATION access right.
-// Returns an error of type NTStatus.
-func NtQueryInformationProcess(handle syscall.Handle, infoClass ProcessInfoClass, info unsafe.Pointer, infoLen uint32) (returnedLen uint32, err error) {
-	status := _NtQueryInformationProcess(handle, uint32(infoClass), uintptr(info), infoLen, &returnedLen)
-	if status != 0 {
-		return returnedLen, NTStatus(status)
-	}
-	return returnedLen, nil
+// Deprecated: use x/sys/windows
+func NtQueryInformationProcess(handle syscall.Handle, infoClass ProcessInfoClass, info unsafe.Pointer, infoLen uint32) (uint32, error) {
+	var returnedLen uint32
+	err := windows.NtQueryInformationProcess(windows.Handle(handle), int32(infoClass), info, infoLen, &returnedLen)
+	return returnedLen, err
 }
 
 // Error prints the wrapped NTSTATUS in hex form.
