@@ -70,6 +70,7 @@ var (
 	procReadProcessMemory         = modkernel32.NewProc("ReadProcessMemory")
 	procNtQueryInformationProcess = modntdll.NewProc("NtQueryInformationProcess")
 	procEnumProcesses             = modpsapi.NewProc("EnumProcesses")
+	procGetPerformanceInfo        = modpsapi.NewProc("GetPerformanceInfo")
 	procGetProcessImageFileNameA  = modpsapi.NewProc("GetProcessImageFileNameA")
 	procGetProcessMemoryInfo      = modpsapi.NewProc("GetProcessMemoryInfo")
 	procGetFileVersionInfoSizeW   = modversion.NewProc("GetFileVersionInfoSizeW")
@@ -131,6 +132,14 @@ func _NtQueryInformationProcess(handle syscall.Handle, infoClass uint32, info ui
 
 func _EnumProcesses(lpidProcess *uint32, cb uint32, lpcbNeeded *uint32) (err error) {
 	r1, _, e1 := syscall.Syscall(procEnumProcesses.Addr(), 3, uintptr(unsafe.Pointer(lpidProcess)), uintptr(cb), uintptr(unsafe.Pointer(lpcbNeeded)))
+	if r1 == 0 {
+		err = errnoErr(e1)
+	}
+	return
+}
+
+func _GetPerformanceInfo(pi *PerformanceInformation, cb uint32) (err error) {
+	r1, _, e1 := syscall.Syscall(procGetPerformanceInfo.Addr(), 2, uintptr(unsafe.Pointer(pi)), uintptr(cb), 0)
 	if r1 == 0 {
 		err = errnoErr(e1)
 	}

@@ -30,6 +30,7 @@ import (
 //sys   _GetProcessMemoryInfo(handle syscall.Handle, psmemCounters *ProcessMemoryCountersEx, cb uint32) (err error) = psapi.GetProcessMemoryInfo
 //sys   _GetProcessImageFileNameA(handle syscall.Handle, imageFileName *byte, nSize uint32) (len uint32, err error) = psapi.GetProcessImageFileNameA
 //sys   _EnumProcesses(lpidProcess *uint32, cb uint32, lpcbNeeded *uint32) (err error) = psapi.EnumProcesses
+//sys   _GetPerformanceInfo(pi *PerformanceInformation, cb uint32) (err error) = psapi.GetPerformanceInfo
 
 var (
 	sizeofProcessMemoryCountersEx = uint32(unsafe.Sizeof(ProcessMemoryCountersEx{}))
@@ -97,4 +98,36 @@ func EnumProcesses() (pids []uint32, err error) {
 			return pids, nil
 		}
 	}
+}
+
+// PerformanceInformation represents the [PERFORMANCE_INFORMATION] structure
+//
+// [PERFORMANCE_INFORMATION]: https://learn.microsoft.com/en-us/windows/win32/api/psapi/ns-psapi-performance_information
+type PerformanceInformation struct {
+	cb                uint32
+	CommitTotal       uintptr // The number of pages currently committed by the system. Note that committing pages (using VirtualAlloc with MEM_COMMIT) changes this value immediately; however, the physical memory is not charged until the pages are accessed.
+	CommitLimit       uintptr // The current maximum number of pages that can be committed by the system without extending the paging file(s). This number can change if memory is added or deleted, or if pagefiles have grown, shrunk, or been added. If the paging file can be extended, this is a soft limit.
+	CommitPeak        uintptr // The maximum number of pages that were simultaneously in the committed state since the last system reboot.
+	PhysicalTotal     uintptr // The amount of actual physical memory, in pages.
+	PhysicalAvailable uintptr // The amount of physical memory currently available, in pages. This is the amount of physical memory that can be immediately reused without having to write its contents to disk first. It is the sum of the size of the standby, free, and zero lists.
+	SystemCache       uintptr // The amount of system cache memory, in pages. This is the size of the standby list plus the system working set.
+	KernelTotal       uintptr // The sum of the memory currently in the paged and nonpaged kernel pools, in pages.
+	KernelPaged       uintptr // The memory currently in the paged kernel pool, in pages.
+	KernelNonpaged    uintptr // The memory currently in the nonpaged kernel pool, in pages.
+	PageSize          uintptr // The size of a page, in bytes.
+	HandleCount       uint32  // The current number of open handles.
+	ProcessCount      uint32  // The current number of processes.
+	ThreadCount       uint32  // The current number of threads.
+}
+
+// GetPerformanceInfo retrieves performance information for the system.
+// https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getperformanceinfo
+func GetPerformanceInfo() (PerformanceInformation, error) {
+	var pi PerformanceInformation
+	pi.CB = uint32(unsafe.Sizeof(pi))
+
+	if err := _GetPerformanceInfo(&pi, pi.CB); err != nil {
+		return PerformanceInformation{}, fmt.Errorf("GetPerformanceInfo failed: %w", err)
+	}
+	return pi, nil
 }
